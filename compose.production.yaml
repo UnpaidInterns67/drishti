@@ -1,0 +1,32 @@
+services:
+  drishti:
+    environment:
+      APP_ENV: production
+      AUTH_COOKIE_SECURE: "true"
+      REQUIRE_HTTPS: "true"
+      DATA_VOLUME_ENCRYPTED: ${DATA_VOLUME_ENCRYPTED:-false}
+      ALLOWED_HOSTS: ${DRISHTI_DOMAIN}
+      CORS_ORIGINS: https://${DRISHTI_DOMAIN}
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - drishti
+    environment:
+      DRISHTI_DOMAIN: ${DRISHTI_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Border identity intelligence and traveller continuity screening">
+    <meta name="theme-color" content="#081321">
+    <title>Drishti Border Intelligence</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+  </head>
+  <body>
+    <section id="login-gate" class="login-gate" aria-labelledby="login-title">
+      <div class="login-card">
+        <div class="login-brand"><span class="brand-mark" aria-hidden="true">दृ</span><div><p class="eyebrow">Secure officer access</p><h1 id="login-title">Enter Drishti</h1></div></div>
+        <p class="muted">Every screening and checkpoint change is bound to an authenticated officer session.</p>
+        <form id="login-form">
+          <label><span>Officer username</span><input id="login-username" name="username" autocomplete="username" required></label>
+          <label><span>Password</span><input id="login-password" name="password" type="password" autocomplete="current-password" required></label>
+          <p id="login-error" class="login-error" role="alert" hidden></p>
+          <button id="login-button" class="primary" type="submit">Authenticate officer</button>
+        </form>
+        <small class="login-footnote">Restricted government operations console · Session activity is audited</small>
+      </div>
+    </section>
+    <div class="app-shell">
+      <aside class="command-rail">
+        <a class="brand" href="/" aria-label="Drishti Border Intelligence home">
+          <span class="brand-mark" aria-hidden="true">दृ</span>
+          <span><b>DRISHTI</b><small>Border Intelligence</small></span>
+        </a>
+        <div class="rail-context"><label class="rail-label" for="active-checkpoint">Active post</label><select id="active-checkpoint" aria-label="Active border checkpoint"></select><small id="active-post-location">Authenticate to select a post</small></div>
+        <nav aria-label="Screening progress">
+          <ol class="stepper">
+            <li class="active" data-step="1"><span>01</span><div><b>Document</b><small>Authenticate credential</small></div></li>
+            <li data-step="2"><span>02</span><div><b>Biometric</b><small>Verify live traveller</small></div></li>
+            <li data-step="3"><span>03</span><div><b>Intelligence</b><small>Review linked identity</small></div></li>
+          </ol>
+        </nav>
+        <div class="rail-status"><div class="service-state"><span id="health-dot"></span><span id="health-label">Checking service</span></div><small>Local inference · encrypted session</small></div>
+      </aside>
+
+      <div class="workspace">
+        <header class="workspace-header">
+          <div><p class="eyebrow">Officer operations console</p><h1>Identity integrity check</h1></div>
+          <div class="shift-meta"><span id="officer-role">Secure session</span><strong id="officer-name">Officer not signed in</strong><button id="logout-button" class="text-button" type="button">Sign out</button></div>
+        </header>
+
+        <main>
+          <section id="alert" class="alert" role="alert" hidden></section>
+
+          <section id="document-panel" class="panel screening-panel">
+            <div class="panel-copy">
+              <div class="section-heading compact"><div><p class="section-number">01 · Credential intake</p><h2>Authenticate document</h2></div><span class="security-chip">LOCAL AI</span></div>
+              <p class="muted">Validate document structure, issuer evidence and manipulation signals before biometric comparison.</p>
+              <fieldset class="document-kind" aria-label="Document type">
+                <label><input type="radio" name="document-kind" value="aadhaar" checked><span>Aadhaar</span></label>
+                <label><input type="radio" name="document-kind" value="travel"><span>Travel / identity document</span></label>
+              </fieldset>
+              <div id="aadhaar-upload-fields" class="side-uploads">
+                <label class="side-upload" for="aadhaar-front-input"><input id="aadhaar-front-input" type="file" accept="image/jpeg,image/png,image/webp,image/tiff" hidden><span class="upload-icon" aria-hidden="true">↑</span><strong>Aadhaar front</strong><small id="aadhaar-front-label">Choose front image</small></label>
+                <label class="side-upload" for="aadhaar-back-input"><input id="aadhaar-back-input" type="file" accept="image/jpeg,image/png,image/webp,image/tiff" hidden><span class="upload-icon" aria-hidden="true">⌁</span><strong>Secure QR side</strong><small id="aadhaar-back-label">Choose back image</small></label>
+              </div>
+              <div id="travel-upload-field" hidden>
+                <label id="drop-zone" class="drop-zone" for="document-input"><input id="document-input" type="file" accept="image/jpeg,image/png,image/webp,image/tiff" hidden><span class="upload-icon" aria-hidden="true">↑</span><strong id="file-label">Choose passport, visa, ID, licence, or permit</strong><small>JPG, PNG, WEBP, or TIFF · maximum 15 MB</small></label>
+              </div>
+              <button id="analyze-button" class="primary" type="button" disabled>Verify Aadhaar front + back</button>
+            </div>
+            <div class="preview-shell">
+              <div class="preview-grid" aria-hidden="true"></div>
+              <div id="aadhaar-previews" class="aadhaar-previews" hidden>
+                <figure><img id="aadhaar-front-preview" alt="Selected Aadhaar front preview"><figcaption>VISIBLE FRONT</figcaption></figure>
+                <figure><img id="aadhaar-back-preview" alt="Selected Aadhaar back preview"><figcaption>SECURE QR</figcaption></figure>
+              </div>
+              <img id="document-preview" alt="Selected identity document preview" hidden>
+              <div id="preview-placeholder"><span class="scan-frame"></span><strong>Document preview</strong><small>Waiting for secure capture</small></div>
+            </div>
+          </section>
+
+          <section id="face-panel" class="panel screening-panel" hidden>
+            <div class="panel-copy">
+              <p class="section-number">02 · Biometric continuity</p><h2>Verify live traveller</h2>
+              <p id="face-instruction" class="instruction">Allow camera access, then follow the challenge.</p>
+              <div id="capture-quality" class="capture-quality" aria-live="polite">
+                <div class="capture-quality-heading"><span>Capture confidence</span><strong id="capture-quality-label">Waiting for camera</strong></div>
+                <div class="capture-progress-track"><span id="capture-progress"></span></div>
+                <small id="quality-guidance">Drishti will guide distance, lighting, stillness and pose in real time.</small>
+              </div>
+              <div id="identity-summary" class="summary-card"></div>
+              <div class="border-context">
+                <label class="compact-field"><span>Authenticated checkpoint</span><input id="checkpoint-display" readonly></label>
+                <label class="compact-field"><span>Movement</span><select id="movement"><option value="ENTRY">Entry</option><option value="EXIT">Exit</option><option value="TRANSIT">Transit</option></select></label>
+                <label class="compact-field"><span>Lane</span><input id="lane" value="LANE-01" maxlength="30"></label>
+              </div>
+              <div class="button-row"><button id="camera-button" class="primary" type="button">Start live verification</button><button id="skip-face-button" class="secondary" type="button">Continue without camera</button></div>
+            </div>
+            <div class="camera-shell">
+              <video id="camera" autoplay muted playsinline></video><canvas id="capture-canvas" hidden></canvas><div class="face-guide" aria-hidden="true"></div>
+              <div class="camera-hud"><span class="live-dot"></span><span id="camera-state">Camera offline</span></div>
+            </div>
+          </section>
+
+          <section id="decision-panel" class="panel decision-panel" hidden>
+            <div class="decision-heading"><div><p class="section-number">03 · Officer intelligence</p><h2>Automated triage recommendation</h2><p class="muted">Every recommendation is tied to inspectable evidence. The authorized officer retains the final decision.</p></div><div id="decision-badge" class="decision-badge"></div></div>
+            <div class="metrics"><div><small>Composite risk</small><strong id="risk-score">—</strong></div><div><small>Risk tier</small><strong id="risk-level">—</strong></div><div><small>Session reference</small><strong id="session-label">—</strong></div></div>
+
+            <section id="inspection-panel" class="inspection-panel" hidden>
+              <div class="inspection-heading">
+                <div><p class="eyebrow">Drishti adaptive secondary inspection</p><h3 id="inspection-headline"></h3></div>
+                <div class="inspection-flags"><span id="inspection-priority"></span><span id="inspection-status"></span></div>
+              </div>
+              <p id="inspection-summary" class="inspection-summary"></p>
+              <div class="inspection-grid">
+                <article class="primary-action-card">
+                  <small>Recommended next action</small><strong id="inspection-action"></strong>
+                  <p id="inspection-instruction"></p><span id="inspection-actor"></span>
+                </article>
+                <div><h4>Why Drishti chose this path</h4><div id="decision-path" class="decision-path"></div></div>
+              </div>
+              <p id="inspection-advisory" class="inspection-advisory"></p>
+            </section>
+
+            <section id="continuity-panel" class="continuity-panel" hidden>
+              <div class="continuity-heading"><div><p class="eyebrow">Identity relationship intelligence</p><h3 id="continuity-status"></h3></div><span id="crossing-count" class="status-chip"></span></div>
+              <p id="continuity-summary" class="muted"></p><div id="continuity-alerts" class="continuity-alerts"></div>
+              <div class="intelligence-grid">
+                <div class="graph-surface">
+                  <div class="graph-toolbar"><h4>Linked identity graph</h4><div class="graph-legend"><span><i class="legend-biometric"></i>Biometric</span><span><i class="legend-profile"></i>Identity</span><span><i class="legend-document"></i>Document</span><span><i class="legend-post"></i>Checkpoint</span></div></div>
+                  <svg id="identity-graph" role="img" aria-label="Relationship graph linking biometric identity, claimed profiles, documents and checkpoints"></svg>
+                  <div id="graph-detail" class="graph-detail" aria-live="polite">Select a node to inspect its relationship.</div>
+                </div>
+                <div class="timeline-surface"><h4>Crossing chronology</h4><div id="crossing-timeline" class="crossing-timeline"></div></div>
+              </div>
+            </section>
+
+            <div class="evidence-layout">
+              <div><div class="subheading"><h3>Decision evidence</h3><span>Automated signals</span></div><div id="evidence-list" class="evidence-list"></div></div>
+              <div><div class="subheading"><h3>Credential record</h3><span>Extracted fields</span></div><dl id="result-details" class="details"></dl></div>
+            </div>
+            <section id="disposition-panel" class="disposition-panel" aria-labelledby="disposition-title">
+              <div><p class="eyebrow">Accountable human decision</p><h3 id="disposition-title">Record officer disposition</h3><p id="disposition-status" class="muted">Automated triage does not replace the authorized officer’s statutory decision.</p></div>
+              <div class="disposition-fields">
+                <label><span>Reason</span><select id="disposition-reason"><option value="AUTOMATED_CHECKS_CLEAR">Automated checks clear</option><option value="DOCUMENT_EXAMINATION">Physical document examination</option><option value="WATCHLIST_ESCALATION">Watchlist escalation</option><option value="BIOMETRIC_MISMATCH">Biometric mismatch</option><option value="IDENTITY_CONFLICT">Identity conflict</option><option value="SUPERVISOR_DIRECTION">Supervisor direction</option><option value="INSUFFICIENT_EVIDENCE">Insufficient evidence</option><option value="OTHER">Other authorized reason</option></select></label>
+                <label><span>Officer notes (optional)</span><input id="disposition-notes" maxlength="1000" placeholder="Record relevant observations without unnecessary personal data"></label>
+              </div>
+              <div class="button-row disposition-actions"><button type="button" data-disposition="CLEARED" class="secondary">Clear traveller</button><button type="button" data-disposition="REFERRED" class="primary">Refer to secondary</button><button type="button" data-disposition="DENIED" class="danger">Deny / detain per SOP</button></div>
+            </section>
+            <details id="audit-panel" class="audit-panel"><summary>Open immutable screening audit</summary><div id="audit-list" class="audit-list"><p class="muted">Open to load recorded events.</p></div></details>
+            <div class="button-row end-actions"><button id="new-screening-button" class="primary" type="button">Start next traveller</button><button id="delete-screening-button" class="danger" type="button">Delete screening data</button></div>
+          </section>
+
+          <section id="history-section" class="history-section">
+            <div class="section-heading"><div><p class="eyebrow">Operational memory</p><h2>Recent screening records</h2><p id="record-count" class="muted"></p></div><button id="refresh-button" class="text-button" type="button">Refresh records</button></div>
+            <div class="session-banner"><span class="security-chip">AUTHENTICATED</span><p>Records and active-post changes are protected by your officer session. Checkpoint changes apply to future finalized crossings.</p></div>
+            <div class="record-filters" role="search"><label><span>Search identity or session</span><input id="record-search" type="search" placeholder="Name, document, session ID"></label><label><span>Decision</span><select id="status-filter"><option value="">All decisions</option><option value="APPROVE">Approve</option><option value="REJECT">Reject</option><option value="RETRY">Retry</option><option value="DOCUMENT_ANALYZED">In progress</option></select></label></div>
+            <div id="history-list" class="history-list"><p class="muted">Loading recent screenings…</p></div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <template id="evidence-template"><article class="evidence-item"><span class="evidence-icon"></span><div><strong></strong><p></p></div></article></template>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

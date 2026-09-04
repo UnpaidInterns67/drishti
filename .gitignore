@@ -1,0 +1,23 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+runtime/
+.env
+.env.*
+!.env.example
+
+# Local evidence and build output must never enter the public repository.
+datasets/raw/
+datasets/processed/
+.codex_tmp/
+.pytest_cache/
+.vscode/
+artifacts/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+*.key
+*.log
+node_modules/

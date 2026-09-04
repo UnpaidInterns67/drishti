@@ -1,0 +1,15 @@
+easyocr
+rapidocr==3.9.2
+onnxruntime==1.29.0
+mediapipe==0.10.21
+numpy<2
+opencv-contrib-python<5
+opencv-python-headless<5
+Pillow
+scikit-image==0.25.2
+tifffile==2025.6.11
+fastapi
+python-multipart
+uvicorn[standard]
+cryptography>=45,<51
+zxing-cpp>=2.3,<3

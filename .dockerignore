@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+venv
+runtime
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.env
+datasets
+tests
+.vscode

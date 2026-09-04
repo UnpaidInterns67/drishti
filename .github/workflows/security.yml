@@ -1,0 +1,28 @@
+name: Security checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Check committed secrets
+        run: python scripts/security_check.py
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Audit Python dependencies
+        run: pip-audit -r requirements.txt
+      - name: Run security and application tests
+        run: pytest -q

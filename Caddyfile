@@ -1,0 +1,16 @@
+{$DRISHTI_DOMAIN} {
+    encode zstd gzip
+    request_body {
+        max_size 32MB
+    }
+    reverse_proxy drishti:8000
+
+    header {
+        Permissions-Policy "camera=(self)"
+        Referrer-Policy "no-referrer"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        -Server
+    }
+}
