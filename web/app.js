@@ -392,6 +392,8 @@ function updateFacePrompt(face) {
     instruction = "Keep your eyes open while the camera calibrates…";
   } else if (face.state === "BLINK" && face.blink_progress > 0) {
     instruction = "Blink seen — open your eyes";
+  } else if (face.state === "TURN_HEAD" && face.turn_progress > 0) {
+    instruction = `${instruction} — hold briefly (${face.turn_progress}/${face.turn_required})`;
   }
   elements.instruction.textContent = instruction;
   elements.cameraState.textContent = face.state ? face.state.replaceAll("_", " ") : "Processing";

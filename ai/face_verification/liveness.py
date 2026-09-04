@@ -64,6 +64,8 @@ class LivenessDetector:
 
         self.latest_ear = None
         self.latest_yaw_signal = None
+        self.center_yaw_baseline = None
+        self._center_yaw_samples = []
 
     def close(self):
         self.face_mesh.close()
@@ -214,6 +216,16 @@ class LivenessDetector:
         self.latest_ear = ear
         self.latest_yaw_signal = yaw_signal
 
+        # Learn the user's neutral pose while blink calibration/challenge is
+        # running. Absolute face geometry varies enough to make a fixed zero
+        # center unreliable across cameras and people.
+        if self.state == "BLINK" and np.isfinite(yaw_signal):
+            self._center_yaw_samples.append(float(yaw_signal))
+            self._center_yaw_samples = self._center_yaw_samples[-12:]
+            self.center_yaw_baseline = float(np.median(self._center_yaw_samples))
+
+        relative_yaw = yaw_signal - (self.center_yaw_baseline or 0.0)
+
         if self.state == "BLINK":
             if self.blink_ready:
                 self._process_blink(ear)
@@ -221,10 +233,10 @@ class LivenessDetector:
                 self._calibrate_blink(ear)
 
         elif self.state == "TURN_HEAD":
-            self._process_head_turn(yaw_signal)
+            self._process_head_turn(relative_yaw)
 
         elif self.state == "RETURN_CENTER":
-            self._process_return_center(yaw_signal)
+            self._process_return_center(relative_yaw)
 
         passed = self.state == "PASSED"
 
@@ -240,6 +252,9 @@ class LivenessDetector:
             "returned_center": self.returned_center,
             "ear": round(ear, 4),
             "yaw_signal": round(yaw_signal, 4),
+            "relative_yaw": round(relative_yaw, 4),
+            "turn_progress": self.turn_frames,
+            "turn_required": HEAD_TURN_FRAMES,
             "turn_direction": self.turn_direction,
             "required_turn_direction": self.required_turn_direction,
             "score": self.score(),
@@ -312,7 +327,10 @@ class LivenessDetector:
                 self.state = "RETURN_CENTER"
                 self.turn_frames = 0
         else:
-            self.turn_frames = 0
+            # A detector miss or threshold-edge sample on a slow network must
+            # not erase all correctly observed progress. Sustained wrong-way
+            # movement still drains the counter and can never pass.
+            self.turn_frames = max(0, self.turn_frames - 1)
 
     def _process_return_center(
         self,
