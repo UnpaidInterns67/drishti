@@ -69,8 +69,10 @@ async def lifespan(_app: FastAPI):
     settings.runtime_directory.mkdir(parents=True, exist_ok=True)
     database.initialize()
     auth_service.bootstrap()
-    if settings.is_production and database.officer_count() == 0:
+    if settings.is_hosted and database.officer_count() == 0:
         raise RuntimeError("Production requires at least one active officer")
+    if settings.environment == "demo":
+        logger.warning("DEMO ONLY: synthetic documents only; temporary records may be lost on restart; encrypted storage is not attested")
     yield
     session_store.clear()
 
@@ -81,9 +83,9 @@ app = FastAPI(
     description="AI-assisted identity document, tampering, and face screening.",
     lifespan=lifespan,
     debug=False,
-    docs_url=None if settings.is_production else "/docs",
-    redoc_url=None if settings.is_production else "/redoc",
-    openapi_url=None if settings.is_production else "/openapi.json",
+    docs_url=None if settings.is_hosted else "/docs",
+    redoc_url=None if settings.is_hosted else "/redoc",
+    openapi_url=None if settings.is_hosted else "/openapi.json",
 )
 
 app.add_middleware(

@@ -18,7 +18,7 @@ Deployment source: https://github.com/UnpaidInterns67/drishti, branch `main`.
 - Supply `BOOTSTRAP_OFFICER_USERNAME` and a unique `BOOTSTRAP_OFFICER_PASSWORD` as backend secrets.
 - Configure exact `ALLOWED_HOSTS`, HTTPS `CORS_ORIGINS`, `AUTH_COOKIE_SECURE=true`, and `REQUIRE_HTTPS=true`.
 - Production startup also requires verified encrypted storage. Do not set `DATA_VOLUME_ENCRYPTED=true` without confirming that it covers the actual runtime filesystem. Free ephemeral storage is not a persistent disk.
-- Do not bypass the production startup checks just to obtain a green deployment.
+- For the explicitly approved synthetic-data-only free demo, set `APP_ENV=demo` and leave `DATA_VOLUME_ENCRYPTED=false`. Demo mode retains hosted security checks and disables public API documentation, but does not require the storage attestation. `APP_ENV=production` still requires encrypted storage.
 
 ## Free-tier limitations and release checks
 

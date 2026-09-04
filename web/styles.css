@@ -1982,3 +1982,13 @@ select:focus {
     height: 285px;
   }
 }
+:root .demo-warning {
+  position: relative;
+  z-index: 10000;
+  padding: 10px 18px;
+  background: #fff3cd;
+  color: #593e00;
+  border-bottom: 1px solid #d6b65c;
+  font: 600 12px/1.5 system-ui, sans-serif;
+  text-align: center;
+}

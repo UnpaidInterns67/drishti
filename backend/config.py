@@ -105,21 +105,25 @@ class Settings:
     def is_production(self) -> bool:
         return self.environment == "production"
 
+    @property
+    def is_hosted(self) -> bool:
+        return self.environment in {"production", "demo"}
+
     def validate_startup(self) -> None:
-        if self.environment not in {"development", "test", "production"}:
-            raise RuntimeError("APP_ENV must be development, test, or production")
+        if self.environment not in {"development", "test", "production", "demo"}:
+            raise RuntimeError("APP_ENV must be development, test, production, or demo")
         if self.max_upload_bytes <= 0 or self.max_image_pixels <= 0:
             raise RuntimeError("Upload limits must be positive")
         if not self.allowed_hosts:
             raise RuntimeError("ALLOWED_HOSTS must contain at least one hostname")
-        if not self.is_production:
+        if not self.is_hosted:
             return
         failures = []
         if not self.auth_cookie_secure:
             failures.append("AUTH_COOKIE_SECURE must be true")
         if not self.require_https:
             failures.append("REQUIRE_HTTPS must be true")
-        if not self.data_volume_encrypted:
+        if self.is_production and not self.data_volume_encrypted:
             failures.append("DATA_VOLUME_ENCRYPTED must attest encrypted storage")
         if "*" in self.allowed_hosts:
             failures.append("ALLOWED_HOSTS cannot contain *")
