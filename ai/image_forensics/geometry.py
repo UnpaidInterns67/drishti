@@ -39,6 +39,14 @@ def analyze_geometry(image_path):
         width * height
     ) / 1_000_000
 
+    # Preserve original resolution metadata, but perform expensive edge and
+    # blur operations on a bounded working image.
+    from backend.config import settings
+    if max(height, width) > settings.analysis_max_dimension:
+        scale = settings.analysis_max_dimension / max(height, width)
+        image = cv2.resize(image, (round(width * scale), round(height * scale)), interpolation=cv2.INTER_AREA)
+    working_height, working_width = image.shape[:2]
+
     # -----------------------------------------------------
     # 2. Aspect ratio
     # -----------------------------------------------------
@@ -120,7 +128,7 @@ def analyze_geometry(image_path):
         threshold=80,
         minLineLength=max(
             50,
-            width // 5
+            working_width // 5
         ),
         maxLineGap=20
     )

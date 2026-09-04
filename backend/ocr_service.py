@@ -55,8 +55,8 @@ class OCRService:
         # while reducing detector latency and memory use on phone images.
         height, width = image.shape[:2]
         max_dimension = max(height, width)
-        if max_dimension > 1600:
-            scale = 1600.0 / max_dimension
+        if max_dimension > settings.analysis_max_dimension:
+            scale = settings.analysis_max_dimension / max_dimension
             image = cv2.resize(
                 image,
                 (max(1, round(width * scale)), max(1, round(height * scale))),
@@ -65,7 +65,9 @@ class OCRService:
 
         try:
             with self._lock:
-                rapid_result = self._get_rapid_reader()(image)
+                # Identity documents are captured upright by the UI. Skipping
+                # per-line direction classification removes one neural pass.
+                rapid_result = self._get_rapid_reader()(image, use_cls=False)
             results = [] if not rapid_result else zip(
                 rapid_result.boxes,
                 rapid_result.txts,
@@ -82,7 +84,7 @@ class OCRService:
                     decoder="greedy",
                     batch_size=16,
                     workers=0,
-                    canvas_size=1600,
+                    canvas_size=settings.analysis_max_dimension,
                     mag_ratio=1.0,
                 )
 

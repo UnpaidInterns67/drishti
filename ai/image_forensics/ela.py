@@ -5,6 +5,14 @@ import numpy as np
 from PIL import Image, ImageChops, ImageEnhance
 
 
+def _analysis_size(image):
+    from backend.config import settings
+    maximum = settings.analysis_max_dimension
+    width, height = image.size
+    scale = min(1.0, maximum / max(width, height))
+    return max(1, round(width * scale)), max(1, round(height * scale))
+
+
 def perform_ela(
     image_path,
     quality=90,
@@ -33,6 +41,9 @@ def perform_ela(
     original = Image.open(
         image_path
     ).convert("RGB")
+    analysis_size = _analysis_size(original)
+    if original.size != analysis_size:
+        original.thumbnail(analysis_size, Image.Resampling.LANCZOS)
 
     # Temporary in-memory recompression
     import io

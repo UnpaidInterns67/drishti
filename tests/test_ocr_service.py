@@ -17,9 +17,11 @@ class _RapidResult:
 class _RapidReader:
     def __init__(self):
         self.image_shape = None
+        self.options = None
 
-    def __call__(self, image):
+    def __call__(self, image, **options):
         self.image_shape = image.shape
+        self.options = options
         return _RapidResult()
 
 
@@ -36,7 +38,8 @@ class OCRServiceTests(unittest.TestCase):
 
         self.assertEqual(result[0]["text"], "Government of India")
         self.assertAlmostEqual(result[0]["confidence"], 0.98)
-        self.assertEqual(max(reader.image_shape[:2]), 1600)
+        self.assertEqual(max(reader.image_shape[:2]), 1280)
+        self.assertEqual(reader.options, {"use_cls": False})
 
 
 if __name__ == "__main__":

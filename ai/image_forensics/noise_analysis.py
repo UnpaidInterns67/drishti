@@ -31,6 +31,12 @@ def analyze_noise(image_path):
             f"Unable to read image: {image_path}"
         )
 
+    from backend.config import settings
+    height, width = image.shape
+    if max(height, width) > settings.analysis_max_dimension:
+        scale = settings.analysis_max_dimension / max(height, width)
+        image = cv2.resize(image, (round(width * scale), round(height * scale)), interpolation=cv2.INTER_AREA)
+
     # Estimate sensor/compression residual only in locally flat pixels. The old
     # implementation averaged all high-frequency content, so portraits, text,
     # logos, and blank card areas inevitably appeared to have different "noise".

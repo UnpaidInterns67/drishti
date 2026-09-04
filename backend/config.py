@@ -92,6 +92,7 @@ class Settings:
         "DATA_VOLUME_ENCRYPTED", "false"
     )
     max_image_pixels: int = int(os.getenv("MAX_IMAGE_PIXELS", "25000000"))
+    analysis_max_dimension: int = int(os.getenv("ANALYSIS_MAX_DIMENSION", "1280"))
     api_rate_limit: int = int(os.getenv("API_RATE_LIMIT", "300"))
     api_rate_window_seconds: int = int(
         os.getenv("API_RATE_WINDOW_SECONDS", "60")
@@ -112,7 +113,7 @@ class Settings:
     def validate_startup(self) -> None:
         if self.environment not in {"development", "test", "production", "demo"}:
             raise RuntimeError("APP_ENV must be development, test, production, or demo")
-        if self.max_upload_bytes <= 0 or self.max_image_pixels <= 0:
+        if self.max_upload_bytes <= 0 or self.max_image_pixels <= 0 or self.analysis_max_dimension < 640:
             raise RuntimeError("Upload limits must be positive")
         if not self.allowed_hosts:
             raise RuntimeError("ALLOWED_HOSTS must contain at least one hostname")

@@ -24,4 +24,6 @@ Deployment source: https://github.com/UnpaidInterns67/drishti, branch `main`.
 
 Free Render compute has limited memory and CPU, sleeps when idle, and loses SQLite data, uploads, and downloaded model caches on restart/redeploy. This is a synthetic-data demonstration target, not an operational identity screening deployment.
 
+`ANALYSIS_MAX_DIMENSION` bounds OCR and forensic inference pixels without replacing the retained original upload. The hosted free demo uses `1100`; raise it if small text accuracy degrades. RapidOCR skips text-line direction classification because the capture UI requires upright documents.
+
 Before claiming success, verify health, authenticated login, CSRF-protected upload, OCR inference, camera permission and face processing, logout, and memory usage under the free limit. Keep a local presentation backup. A successful homepage alone does not establish a working AI backend.
