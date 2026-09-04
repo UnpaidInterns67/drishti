@@ -6,8 +6,8 @@ Deployment source: https://github.com/UnpaidInterns67/drishti, branch `main`.
 
 - Use the Hobby plan where eligible. Import the existing repository; do not create a clone.
 - Root directory: `web`. Framework preset: Other.
-- `vercel.ts` builds only the three public frontend files and proxies `/api/*` and `/health` to Render.
-- Set `BACKEND_ORIGIN` to the actual Render HTTPS origin, without a path. Configuration intentionally fails until this is supplied.
+- `vercel.json` builds only the three public frontend files and proxies `/api/*` and `/health` to the verified Render origin `https://drishti-unpaidinterns-api.onrender.com`.
+- No frontend environment variables are required. Update both rewrite destinations if the backend URL changes.
 - Never put the officer password or other backend secrets in Vercel.
 - The same-origin proxy preserves the application's host-only, Secure, SameSite=Strict cookies and CSRF flow. Verify login and logout through the deployed frontend.
 
