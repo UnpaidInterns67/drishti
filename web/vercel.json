@@ -4,6 +4,7 @@
   "buildCommand": "node build.mjs",
   "outputDirectory": "dist",
   "redirects": [
+    { "source": "/", "destination": "https://drishti-unpaidinterns-api.onrender.com/", "permanent": false },
     { "source": "/:path*", "destination": "https://drishti-unpaidinterns-api.onrender.com/:path*", "permanent": false }
   ],
   "headers": [{
