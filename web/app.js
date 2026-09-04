@@ -76,7 +76,7 @@ function showError(error) {
   const detail = error?.detail;
   const message = typeof detail === "string"
     ? detail
-    : detail?.message || detail?.code || error?.message || "Something went wrong.";
+    : detail?.message || detail?.code || error?.message || "The hosted analysis did not complete. Retry once; if this persists, use the Render demo URL shown in the project README.";
   elements.alert.textContent = message.replaceAll("_", " ");
   elements.alert.hidden = false;
 }

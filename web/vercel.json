@@ -3,9 +3,8 @@
   "framework": null,
   "buildCommand": "node build.mjs",
   "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://drishti-unpaidinterns-api.onrender.com/api/:path*" },
-    { "source": "/health", "destination": "https://drishti-unpaidinterns-api.onrender.com/health" }
+  "redirects": [
+    { "source": "/:path*", "destination": "https://drishti-unpaidinterns-api.onrender.com/:path*", "permanent": false }
   ],
   "headers": [{
     "source": "/(.*)",
