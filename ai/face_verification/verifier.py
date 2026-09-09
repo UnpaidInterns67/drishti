@@ -9,6 +9,7 @@ import numpy as np
 
 from .config import (
     FACE_MATCH_UNCERTAINTY_MARGIN,
+    HEAD_CENTER_THRESHOLD,
     MAX_STABLE_EMBEDDING_SAMPLES,
     MIN_STABLE_EMBEDDING_SAMPLES,
     RECOMMENDED_MATCH_THRESHOLD,
@@ -28,6 +29,7 @@ def stable_similarity(id_embedding, live_embeddings, similarity_function):
     ]
     if not scores:
         return None
+    # The median limits the influence of a single unusually good or bad frame.
     return {
         "median": round(float(np.median(scores)), 4),
         "minimum": round(float(np.min(scores)), 4),
@@ -38,27 +40,22 @@ def stable_similarity(id_embedding, live_embeddings, similarity_function):
 
 
 class IdentityVerifier:
-    def __init__(
-            self,
-            match_threshold: float = RECOMMENDED_MATCH_THRESHOLD,
-        ):
+    def __init__(self, match_threshold: float = RECOMMENDED_MATCH_THRESHOLD):
+        self.face_engine = FaceEngine()
+        self.quality_checker = FaceQualityChecker()
+        self.match_threshold = match_threshold
 
-            self.face_engine = FaceEngine()
-            self.quality_checker = FaceQualityChecker()
-            self.match_threshold = match_threshold
+        self.session_active = False
+        self.id_embedding = None
+        self.liveness = None
 
-            self.session_active = False
-            self.id_embedding = None
-            self.liveness = None
+        self.best_live_embedding = None
+        self.best_face_confidence = 0.0
+        self.live_embedding_samples = []
 
-            self.best_live_embedding = None
-            self.best_face_confidence = 0.0
-            self.live_embedding_samples = []
-
-            self.no_face_frames = 0
-            self.multi_face_frames = 0
-
-            self.final_result = None
+        self.no_face_frames = 0
+        self.multi_face_frames = 0
+        self.final_result = None
 
     def load_id_embedding(self, id_image_path: str | Path):
         id_image_path = Path(id_image_path)
@@ -149,7 +146,7 @@ class IdentityVerifier:
             "instruction": "Look at the camera and keep your eyes open",
         }
 
-    def process_frame(self, frame) -> dict:
+    def process_frame(self, frame, *, mirror_liveness=False) -> dict:
         """
         Process ONE camera frame.
 
@@ -169,6 +166,7 @@ class IdentityVerifier:
             return self.final_result
 
         if frame is None or frame.size == 0:
+            self.live_embedding_samples.clear()
             return {
                 "state": "WAITING",
                 "reason": "invalid_frame",
@@ -178,6 +176,7 @@ class IdentityVerifier:
 
         if len(faces) == 0:
             self.no_face_frames += 1
+            self.live_embedding_samples.clear()
 
             # Ignore a couple of temporary detection misses.
             if self.no_face_frames < 3:
@@ -198,6 +197,7 @@ class IdentityVerifier:
 
         if len(faces) > 1:
             self.multi_face_frames += 1
+            self.live_embedding_samples.clear()
 
             if self.multi_face_frames < 3:
                 return {
@@ -224,6 +224,7 @@ class IdentityVerifier:
         )
 
         if not quality["passed"]:
+            self.live_embedding_samples.clear()
             failures = quality.get(
                 "failures",
                 [],
@@ -246,6 +247,10 @@ class IdentityVerifier:
             frame,
             cv2.COLOR_BGR2RGB,
         )
+        # Mirror only the challenge view so left/right instructions retain
+        # their browser meaning. Recognition uses the original camera image.
+        if mirror_liveness:
+            rgb = cv2.flip(rgb, 1)
 
         live_result = self.liveness.process(rgb)
 
@@ -253,13 +258,27 @@ class IdentityVerifier:
             face
         )
 
-        try:
-            self._record_embedding(
-                self.face_engine.embedding(frame, face),
-                confidence,
-            )
-        except cv2.error:
-            pass
+        # Challenge motion and closed-eye frames are not recognition samples.
+        # Collect a fresh consecutive set only after the user faces forward.
+        yaw = live_result.get("relative_yaw", live_result.get("yaw_signal"))
+        ear = live_result.get("ear")
+        open_baseline = getattr(self.liveness, "open_ear_baseline", None)
+        capture_ready = (
+            live_result.get("passed", False)
+            and yaw is not None and np.isfinite(yaw)
+            and abs(yaw) <= HEAD_CENTER_THRESHOLD
+            and ear is not None and np.isfinite(ear)
+            and ear >= (open_baseline * 0.86 if open_baseline else 0.23)
+        )
+        if capture_ready:
+            try:
+                self._record_embedding(
+                    self.face_engine.embedding(frame, face), confidence,
+                )
+            except cv2.error:
+                self.live_embedding_samples.clear()
+        else:
+            self.live_embedding_samples.clear()
 
         if live_result.get("failed"):
             self.final_result = {
@@ -324,7 +343,7 @@ class IdentityVerifier:
                 "face_detected": True,
                 "quality_passed": True,
                 "liveness_passed": True,
-                "instruction": "Hold still while Drishti confirms a stable face sample",
+                "instruction": "Look straight at the camera, eyes open, and hold still for the face comparison",
                 "quality": quality,
                 "capture_stability": self._capture_stability(),
             }

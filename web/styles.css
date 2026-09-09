@@ -1992,3 +1992,9 @@ select:focus {
   font: 600 12px/1.5 system-ui, sans-serif;
   text-align: center;
 }
+
+/* Synthetic walkthrough controls stay visible above the evidence panels. */
+#demo-panel { padding: 24px; border: 2px solid #b88525; }
+#demo-panel h2 { margin: 0 0 10px; }
+#demo-panel p { margin: 10px 0 18px; }
+#demo-result-notice { background: #fff7df; color: #654700; border-color: #d6b669; }

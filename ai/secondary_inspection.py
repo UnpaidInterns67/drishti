@@ -117,6 +117,7 @@ def build_secondary_inspection(
         face_detail = "The stable multi-frame face comparison is below threshold."
     signal("Live biometric", face_status, face_detail)
 
+    # Order matters: urgent identity and issuer alerts take priority over recapture.
     if watchlist_hit:
         actions.append(_action(
             "CONTROLLED_WATCHLIST_ESCALATION",

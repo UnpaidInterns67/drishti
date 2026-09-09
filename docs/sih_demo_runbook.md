@@ -1,5 +1,56 @@
 # SIH 2026 demo runbook
 
+## One-click synthetic walkthroughs
+
+Start the normal authenticated local server with `DEMO_ENABLED=true`:
+
+```powershell
+$env:DEMO_ENABLED = "true"
+$env:AUTH_COOKIE_SECURE = "false" # localhost HTTP only
+.\venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+Use your configured officer credentials. After signing in, the **SIH synthetic
+walkthroughs** panel offers four buttons; each opens the existing evidence,
+triage, identity graph and officer-disposition panels in one click.
+
+| Button | Expected walkthrough |
+|---|---|
+| Clean clearance | APPROVE, low risk, machine consistency only; click Clear traveller and open the temporary synthetic audit. |
+| Document inconsistency | RETRY; visible DEMO0002 conflicts with MRZ DEMO0001. Inspect the conflicting-source evidence and refer for examination. |
+| Poor capture / recapture | RETRY with IMAGE_RECAPTURE_REQUIRED, without a tampering accusation. Click Simulate improved document recapture to reach APPROVE in the same run. |
+| Same-face conflicting identity | REJECT triage, IDENTITY_CONFLICT graph and fictional previous crossing; supervisor action focuses on name and date of birth. Refer to secondary. |
+
+All observations are deterministic fixtures: fabricated OCR text, simulated
+capture and liveness, and three-dimensional toy vectors (not real biometric
+embeddings). Document parsing, duplicate comparison, continuity, triage and
+secondary-inspection policy execute normally. These walkthroughs do not test
+camera, OCR-model or face-model accuracy. No genuine identity document, portrait,
+issuer signature, chip check or government lookup is supplied or claimed.
+`UTO`, `DEMO` identifiers and explicitly fictional names label the specimens.
+The synthetic expiry is fixed at 2049-12-31; update fixtures before that date.
+
+Demo API routes live under `/api/v1/demo`: `GET /scenarios`,
+`POST /scenarios/{id}`, `POST /runs/{id}/recapture`,
+`POST /runs/{id}/disposition`, and `GET /runs/{id}/audit`.
+They retain ordinary authentication and CSRF protection. Runs are owner-scoped,
+kept only in process memory for 30 minutes, and capped at 100. Use one server
+worker for the walkthrough. A restart or eviction removes the rehearsal;
+start the scenario again if a run expires. Audit entries are temporary synthetic
+events, not the persistent operational audit.
+
+Fixtures never access operational watchlists, enroll a face, or write screenings
+or crossings to the database. Each button starts an independent run; scenario
+order does not matter. Exit synthetic demo returns to normal intake. Demo mode
+is disabled by default and cannot be enabled when `APP_ENV=production`.
+Do not enter real personal information in rehearsal notes.
+
+Verification: `python -m pytest tests/test_demo.py tests/test_frontend.py -q`.
+The integration tests cover all four results, recapture, disposition, audit,
+operational isolation, owner access, CSRF, authentication and production gating.
+
+The manual camera walkthrough below is an optional separate demonstration.
+
 ## The one-sentence pitch
 
 Most systems ask whether two faces match. Drishti asks whether an identity

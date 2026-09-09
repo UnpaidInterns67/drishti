@@ -33,6 +33,17 @@ class FrontendAssetTests(unittest.TestCase):
         self.assertNotIn('id="offline-kyc-input"', html)
         self.assertNotIn('id="offline-kyc-share-code"', html)
 
+    def test_synthetic_demo_controls_and_routes(self):
+        html = (FRONTEND / "index.html").read_text(encoding="utf-8")
+        javascript = (FRONTEND / "app.js").read_text(encoding="utf-8")
+        for control in ("demo-panel", "demo-scenarios", "demo-result-notice", "demo-recapture", "demo-exit"):
+            self.assertIn(f'id="{control}"', html)
+        self.assertIn("No real faces", html)
+        self.assertIn("/demo/scenarios", javascript)
+        self.assertIn("/demo/runs/${state.sessionId}/recapture", javascript)
+        self.assertIn('"demo/runs" : "screenings"', javascript)
+        self.assertIn("Open temporary synthetic audit", javascript)
+
     def test_client_uses_the_screening_workflow(self):
         javascript = (FRONTEND / "app.js").read_text(encoding="utf-8")
 

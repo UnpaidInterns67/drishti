@@ -21,7 +21,7 @@ class FakeVerifier:
         self.session_active = True
         return {"started": True, "state": "BLINK", "instruction": "Blink once"}
 
-    def process_frame(self, _frame):
+    def process_frame(self, _frame, *, mirror_liveness=False):
         self.session_active = False
         return {
             "verification_passed": True,

@@ -52,6 +52,7 @@ def _environment_bool(name: str, default: str) -> bool:
 @dataclass(frozen=True)
 class Settings:
     environment: str = os.getenv("APP_ENV", "development").strip().lower()
+    demo_enabled: bool = _environment_bool("DEMO_ENABLED", "false")
     api_prefix: str = "/api/v1"
     max_upload_bytes: int = int(os.getenv("MAX_UPLOAD_BYTES", 15 * 1024 * 1024))
     session_ttl_seconds: int = int(os.getenv("SESSION_TTL_SECONDS", 30 * 60))

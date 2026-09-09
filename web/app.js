@@ -126,6 +126,7 @@ function renderOfficer(payload) {
   $("#active-post-location").textContent = officer.active_checkpoint.location;
   elements.checkpointDisplay.value = `${officer.active_checkpoint.name} · ${officer.active_checkpoint.code}`;
   elements.loginGate.hidden = true;
+  loadDemoScenarios();
 }
 
 async function login(event) {
@@ -146,7 +147,6 @@ async function login(event) {
     sessionStorage.setItem("drishti_csrf", state.csrfToken);
     renderOfficer(payload);
     elements.loginPassword.value = "";
-    request(`${API}/warmup`, { method: "POST" }).catch(() => {});
     loadHistory();
   } catch (error) {
     elements.loginError.textContent = error?.detail?.code === "INVALID_OFFICER_CREDENTIALS"
@@ -165,7 +165,6 @@ async function restoreSession() {
       return;
     }
     renderOfficer(payload);
-    request(`${API}/warmup`, { method: "POST" }).catch(() => {});
     loadHistory();
   } catch { showLogin(); }
 }
@@ -328,13 +327,14 @@ async function startCameraCheck() {
   elements.cameraButton.disabled = true;
   elements.cameraButton.textContent = "Starting…";
   try {
-    const start = await request(`${API}/screenings/${state.sessionId}/face/start`, { method: "POST" });
     state.stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 720 } },
       audio: false,
     });
     elements.video.srcObject = state.stream;
     await elements.video.play();
+    // Start the challenge clock only after camera permission and startup.
+    const start = await request(`${API}/screenings/${state.sessionId}/face/start`, { method: "POST" });
     updateFacePrompt(start.face);
     elements.cameraState.textContent = "Live check active";
     // A natural blink often lasts 100-400 ms. Send sequential frames often
@@ -355,7 +355,7 @@ function frameBlob() {
   if (!width || !height) return Promise.resolve(null);
   elements.canvas.width = width;
   elements.canvas.height = height;
-  elements.canvas.getContext("2d").drawImage(elements.video, 0, 0, width, height);
+  elements.canvas.getContext("2d").drawImage(elements.video, 0, 0, elements.canvas.width, elements.canvas.height);
   return new Promise((resolve) => elements.canvas.toBlob(resolve, "image/jpeg", .86));
 }
 
@@ -374,6 +374,12 @@ async function sendFrame() {
     updateFacePrompt(payload.face);
     if (Object.hasOwn(payload.face, "verification_passed")) {
       stopCamera();
+      if (payload.face.reason === "timeout") {
+        elements.instruction.textContent = "Camera challenge timed out. Restart and close your eyes for one second, then reopen them when prompted.";
+        elements.cameraButton.disabled = false;
+        elements.cameraButton.textContent = "Restart camera check";
+        return;
+      }
       await finalize(false);
     }
   } catch (error) {
@@ -394,6 +400,8 @@ function updateFacePrompt(face) {
     instruction = "Blink seen — open your eyes";
   } else if (face.state === "TURN_HEAD" && face.turn_progress > 0) {
     instruction = `${instruction} — hold briefly (${face.turn_progress}/${face.turn_required})`;
+  } else if (face.state === "BLINK" && face.blink_ready) {
+    instruction = "Close your eyes for one second, then open them";
   }
   elements.instruction.textContent = instruction;
   elements.cameraState.textContent = face.state ? face.state.replaceAll("_", " ") : "Processing";
@@ -410,10 +418,14 @@ function renderCaptureQuality(face) {
   if (face.quality_passed === false) {
     label = "Adjustment needed";
     progress = 0;
+  } else if (face.face_detected && face.liveness_passed === false) {
+    label = "Face detected · complete the camera challenge";
+    progress = Math.max(.15, Number(face.liveness_score || 0) * .7);
+    guidance = elements.instruction.textContent;
   } else if (stability.stable) {
     label = `${stability.samples} stable frames secured`;
     progress = 1;
-    guidance = "Multi-frame sample is stable. Complete the live-person challenge.";
+    guidance = "Face samples captured. Comparing with the document portrait.";
   } else if (stability.required_samples) {
     label = `${stability.samples || 0}/${stability.required_samples} stable frames`;
   } else if (quality.passed) {
@@ -467,6 +479,14 @@ async function finalize(allowIncompleteFace) {
 
 function renderDecision() {
   const result = state.snapshot.final || {};
+  const demo = state.snapshot.demo;
+  elements.auditPanel.querySelector("summary").textContent = demo ? "Open temporary synthetic audit" : "Open immutable screening audit";
+  $("#demo-result-notice").hidden = !demo;
+  $("#demo-result-notice").textContent = demo?.notice || "";
+  $("#demo-exit").hidden = !demo;
+  $("#demo-recapture").hidden = !demo || demo.scenario !== "poor-capture" || demo.recaptured;
+  $("#delete-screening-button").hidden = Boolean(demo) || state.auth?.officer.role !== "ADMIN";
+  elements.auditPanel.hidden = !demo && state.auth?.officer.role !== "ADMIN";
   const badge = $("#decision-badge");
   badge.textContent = (result.decision || "UNKNOWN").replaceAll("_", " ");
   badge.className = `decision-badge ${(result.decision || "").toLowerCase().replaceAll("_", "-")}`;
@@ -497,7 +517,7 @@ function renderDecision() {
     code: "MRZ CHECK DIGITS VALID",
     message: "All available machine-readable-zone check digits are internally consistent.",
   });
-  if (documentResult.cross_validation?.overall_status === "CONSISTENT_WITH_OCR") positiveEvidence.push({
+  if (documentResult.mrz?.detected && documentResult.cross_validation?.overall_status === "CONSISTENT_WITH_OCR") positiveEvidence.push({
     code: "VISIBLE AND MACHINE DATA CONSISTENT",
     message: `${documentResult.cross_validation.confirmed_matches || 0} independently extracted field(s) agree.`,
   });
@@ -599,7 +619,7 @@ async function recordDisposition(decision) {
         ? "INSUFFICIENT_EVIDENCE"
         : "SUPERVISOR_DIRECTION";
     }
-    state.snapshot = await request(`${API}/screenings/${state.sessionId}/disposition`, {
+    state.snapshot = await request(`${API}/${state.snapshot?.synthetic ? "demo/runs" : "screenings"}/${state.sessionId}/disposition`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -818,6 +838,10 @@ function renderIdentityGraph(graph) {
 }
 
 function resetScreening() {
+  $("#demo-recapture").hidden = true;
+  $("#demo-exit").hidden = true;
+  $("#demo-result-notice").hidden = true;
+  $("#demo-status").textContent = "";
   stopCamera();
   state.sessionId = null;
   state.file = null;
@@ -923,7 +947,7 @@ function renderHistory() {
 async function loadAudit(sessionId) {
   elements.auditList.innerHTML = "<p class='muted'>Loading audit trail…</p>";
   try {
-    const payload = await request(`${API}/screenings/${sessionId}/audit`);
+    const payload = await request(`${API}/${state.snapshot?.synthetic ? "demo/runs" : "screenings"}/${sessionId}/audit`);
     if (!payload.events.length) {
       elements.auditList.innerHTML = "<p class='muted'>No audit events were recorded.</p>";
       return;
@@ -1007,3 +1031,66 @@ request("/health").then(() => {
 });
 setDocumentKind("aadhaar");
 restoreSession();
+
+
+// Demo runs reuse the result panels, but their records stay in the demo API.
+async function loadDemoScenarios() {
+  try {
+    const payload = await request(`${API}/demo/scenarios`);
+    $("#demo-panel").hidden = !payload.enabled;
+
+    // Synthetic walkthroughs do not need OCR or camera models to be loaded.
+    if (!payload.enabled) {
+      request(`${API}/warmup`, { method: "POST" }).catch(() => {});
+    }
+
+    const scenarioButtons = $("#demo-scenarios");
+    scenarioButtons.replaceChildren();
+    payload.scenarios.forEach((scenario) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary";
+      button.textContent = scenario.title;
+      button.addEventListener("click", () => runDemo(scenario.id));
+      scenarioButtons.append(button);
+    });
+  } catch {
+    $("#demo-panel").hidden = true;
+  }
+}
+
+async function runDemo(scenario, recapture = false) {
+  const buttons = $("#demo-panel").querySelectorAll("button");
+  buttons.forEach((button) => { button.disabled = true; });
+  clearError();
+  stopCamera();
+
+  try {
+    const path = recapture
+      ? `${API}/demo/runs/${state.sessionId}/recapture`
+      : `${API}/demo/scenarios/${scenario}`;
+    const snapshot = await request(path, { method: "POST" });
+
+    // Wait for a successful response before replacing the current result.
+    resetScreening();
+    state.snapshot = snapshot;
+    state.sessionId = snapshot.session_id;
+    renderDecision();
+    elements.documentPanel.hidden = true;
+    elements.facePanel.hidden = true;
+    elements.decisionPanel.hidden = false;
+    setStep(3);
+
+    const recaptureLabel = snapshot.demo.recaptured ? " — improved recapture" : "";
+    $("#demo-status").textContent =
+      `SYNTHETIC DEMO: ${snapshot.demo.scenario}${recaptureLabel}. Temporary rehearsal only.`;
+    await loadAudit(state.sessionId);
+  } catch (error) {
+    showError(error);
+  } finally {
+    buttons.forEach((button) => { button.disabled = false; });
+  }
+}
+
+$("#demo-recapture").addEventListener("click", () => runDemo("poor-capture", true));
+$("#demo-exit").addEventListener("click", resetScreening);

@@ -49,6 +49,14 @@
         <main>
           <section id="alert" class="alert" role="alert" hidden></section>
 
+          <section id="demo-panel" class="panel" hidden>
+            <h2>SIH synthetic walkthroughs</h2>
+            <p>Simulated OCR, capture and liveness with fictional identities and toy vectors. No real faces, issuer verification or government database checks. Results never enter operational history.</p>
+            <div id="demo-scenarios" class="button-row"></div>
+            <p id="demo-status" role="status" aria-live="polite"></p>
+            <button id="demo-recapture" class="primary" type="button" hidden>Simulate improved document recapture</button>
+            <button id="demo-exit" class="secondary" type="button" hidden>Exit synthetic demo</button>
+          </section>
           <section id="document-panel" class="panel screening-panel">
             <div class="panel-copy">
               <div class="section-heading compact"><div><p class="section-number">01 · Credential intake</p><h2>Authenticate document</h2></div><span class="security-chip">LOCAL AI</span></div>
@@ -101,7 +109,7 @@
           </section>
 
           <section id="decision-panel" class="panel decision-panel" hidden>
-            <div class="decision-heading"><div><p class="section-number">03 · Officer intelligence</p><h2>Automated triage recommendation</h2><p class="muted">Every recommendation is tied to inspectable evidence. The authorized officer retains the final decision.</p></div><div id="decision-badge" class="decision-badge"></div></div>
+            <p id="demo-result-notice" class="alert" hidden></p><div class="decision-heading"><div><p class="section-number">03 · Officer intelligence</p><h2>Automated triage recommendation</h2><p class="muted">Every recommendation is tied to inspectable evidence. The authorized officer retains the final decision.</p></div><div id="decision-badge" class="decision-badge"></div></div>
             <div class="metrics"><div><small>Composite risk</small><strong id="risk-score">—</strong></div><div><small>Risk tier</small><strong id="risk-level">—</strong></div><div><small>Session reference</small><strong id="session-label">—</strong></div></div>
 
             <section id="inspection-panel" class="inspection-panel" hidden>

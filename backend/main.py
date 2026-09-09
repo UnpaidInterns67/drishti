@@ -675,9 +675,7 @@ async def process_face_frame(
             if session.verifier is None or not session.verifier.session_active:
                 raise RuntimeError("Face session is not active")
             decoded = _decode_frame(data)
-            if mirrored:
-                decoded = cv2.flip(decoded, 1)
-            result = session.verifier.process_frame(decoded)
+            result = session.verifier.process_frame(decoded, mirror_liveness=mirrored)
             if "verification_passed" in result:
                 session.face_result = result
                 database.add_audit_event(
@@ -1072,6 +1070,10 @@ def list_security_events(
 ):
     _require_admin(request)
     return {"events": database.list_security_events(limit), "limit": limit}
+
+
+from .demo import router as demo_router
+app.include_router(demo_router)
 
 
 # Keep the UI routes last so they can never shadow the API endpoints above.

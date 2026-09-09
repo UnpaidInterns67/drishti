@@ -35,50 +35,30 @@ def analyze_image_forensics(image_path):
             f"Image not found: {image_path}"
         )
 
-    # =====================================================
-    # 1. ELA
-    # =====================================================
+    # ELA
 
-    ela_result = perform_ela(
-        image_path
-    )
+    ela_result = perform_ela(image_path)
 
-    # =====================================================
-    # 2. NOISE
-    # =====================================================
+    # NOISE
 
-    noise_result = analyze_noise(
-        image_path
-    )
+    noise_result = analyze_noise(image_path)
 
-    # =====================================================
-    # 3. GEOMETRY
-    # =====================================================
+    # GEOMETRY
 
-    geometry_result = analyze_geometry(
-        image_path
-    )
+    geometry_result = analyze_geometry(image_path)
 
     metadata_result = analyze_metadata(
         image_path
     )
 
-    # =====================================================
-    # 4. Extract scores
-    # =====================================================
+    # Extract scores
 
     ela_score = float(
-        ela_result.get(
-            "ela_score",
-            0
-        )
+        ela_result.get("ela_score", 0)
     )
 
     noise_score = float(
-        noise_result.get(
-            "noise_score",
-            0
-        )
+        noise_result.get("noise_score", 0)
     )
 
     geometry_score = float(
@@ -89,38 +69,24 @@ def analyze_image_forensics(image_path):
     capture_quality = geometry_result.get("capture_quality", {})
 
     metadata_score = float(
-        metadata_result.get(
-            "metadata_score",
-            0
-        )
+        metadata_result.get("metadata_score", 0)
     )
 
-    # =====================================================
-    # 5. Combined forensic score
-    # =====================================================
-    #
+    # Combined forensic score
     # Current experimental weights:
-    #
     # ELA       = 45%
     # Noise     = 35%
     # Metadata  = 20%
-    #
     # These weights will later be calibrated against
     # genuine and manipulated document samples.
-    #
 
     overall_score = (
-        (ela_score * 0.45)
-        +
-        (noise_score * 0.35)
-        +
-        (metadata_score * 0.20)
+        ela_score * 0.45
+        + noise_score * 0.35
+        + metadata_score * 0.20
     )
 
-    overall_score = min(
-        100.0,
-        overall_score
-    )
+    overall_score = min(100.0, overall_score)
 
     # Do not let an explicit detector warning disappear in a weighted average.
     # These floors express evidence strength, not "forgery proven".
@@ -141,33 +107,22 @@ def analyze_image_forensics(image_path):
     if detector_floors:
         overall_score = max(overall_score, max(detector_floors))
 
-    # =====================================================
-    # 6. Risk level
-    # =====================================================
+    # Risk level
 
     if overall_score >= 60:
-
         risk_level = "HIGH"
 
     elif overall_score >= 35:
-
         risk_level = "MEDIUM"
 
     else:
-
         risk_level = "LOW"
 
-    # =====================================================
-    # 7. Collect forensic signals
-    # =====================================================
+    # Collect forensic signals
 
     signals = []
 
-    if ela_result.get(
-        "suspicious",
-        False
-    ):
-
+    if ela_result.get("suspicious", False):
         signals.append({
             "type": "IMAGE_FORENSICS",
             "signal": "ELA_ANOMALY",
@@ -176,11 +131,7 @@ def analyze_image_forensics(image_path):
             "regions": ela_result.get("suspicious_regions", [])
         })
 
-    if noise_result.get(
-        "suspicious",
-        False
-    ):
-
+    if noise_result.get("suspicious", False):
         signals.append({
             "type": "IMAGE_FORENSICS",
             "signal": "NOISE_INCONSISTENCY",
@@ -195,7 +146,6 @@ def analyze_image_forensics(image_path):
     )
 
     for signal in geometry_signals:
-
         signals.append({
             "type": "IMAGE_QUALITY",
             "signal": signal,
@@ -210,16 +160,11 @@ def analyze_image_forensics(image_path):
             "severity": "MEDIUM"
         })
 
-    # =====================================================
-    # 8. Final result
-    # =====================================================
+    # Final result
 
     return {
-
         "image": {
-            "path": str(
-                image_path
-            )
+            "path": str(image_path)
         },
 
         "ela": ela_result,
@@ -231,16 +176,9 @@ def analyze_image_forensics(image_path):
         "metadata": metadata_result,
 
         "overall": {
+            "score": round(overall_score, 2),
 
-            "score": round(
-                overall_score,
-                2
-            ),
-
-            "tampering_score": round(
-                overall_score,
-                2
-            ),
+            "tampering_score": round(overall_score, 2),
 
             "quality_score": float(capture_quality.get("score", 100 - geometry_score)),
 
@@ -261,14 +199,10 @@ def analyze_image_forensics(image_path):
     }
 
 
-# =========================================================
 # Standalone execution
-# =========================================================
 
 if __name__ == "__main__":
-
     if len(sys.argv) < 2:
-
         print(
             "Usage:"
         )

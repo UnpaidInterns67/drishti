@@ -45,6 +45,7 @@ def combine_verification(
         if code in reasons:
             return
         reasons.append(code)
+        # Passing checks must not dilute the strongest adverse signal.
         risk_score = max(risk_score, float(score))
         item = {"code": code, "severity": severity}
         item["message"] = REASON_MESSAGES.get(
@@ -303,8 +304,8 @@ def combine_verification(
     if critical_reject or risk_score >= 70:
         decision = "REJECT"
     elif not all_checks_passed or risk_score >= 35:
-        # Automated recapture replaces an operator review queue for uncertain
-        # OCR, quality, or moderate forensic evidence.
+        # Uncertain evidence asks for another capture or check.
+        # The officer still records the final disposition separately.
         decision = "RETRY"
     else:
         decision = "APPROVE"

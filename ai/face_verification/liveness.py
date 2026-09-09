@@ -174,7 +174,7 @@ class LivenessDetector:
     def process(self, frame_rgb: np.ndarray) -> dict:
         elapsed = time.time() - self.started_at
 
-        if elapsed > LIVENESS_TIMEOUT_SECONDS:
+        if self.state != "PASSED" and elapsed > LIVENESS_TIMEOUT_SECONDS:
             return {
                 "passed": False,
                 "failed": True,

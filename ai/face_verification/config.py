@@ -1,41 +1,24 @@
 from pathlib import Path
 
 
-# config.py:
-# identity-verification/ai/face_verification/config.py
-#
-# parents:
-# [0] face_verification
-# [1] ai
-# [2] identity-verification
-
+# Resolve model paths from the repository, regardless of the working directory.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 MODELS_DIR = PROJECT_ROOT / "models"
 
-YUNET_MODEL = (
-    MODELS_DIR
-    / "face_detection_yunet_2023mar.onnx"
-)
+YUNET_MODEL = MODELS_DIR / "face_detection_yunet_2023mar.onnx"
 
-SFACE_MODEL = (
-    MODELS_DIR
-    / "face_recognition_sface_2021dec.onnx"
-)
+SFACE_MODEL = MODELS_DIR / "face_recognition_sface_2021dec.onnx"
 
 
-# -------------------------
 # Face detection
-# -------------------------
 
 FACE_DETECTION_THRESHOLD = 0.70
 FACE_NMS_THRESHOLD = 0.30
 FACE_TOP_K = 5000
 
 
-# -------------------------
 # Face verification
-# -------------------------
 
 SFACE_MATCH_THRESHOLD = 0.363
 
@@ -48,9 +31,7 @@ MAX_STABLE_EMBEDDING_SAMPLES = 8
 FACE_MATCH_UNCERTAINTY_MARGIN = 0.04
 
 
-# -------------------------
 # Quality
-# -------------------------
 
 MIN_FACE_WIDTH = 90
 MIN_FACE_HEIGHT = 90
@@ -69,9 +50,7 @@ MIN_BRIGHTNESS = 45.0
 MAX_BRIGHTNESS = 220.0
 
 
-# -------------------------
 # Liveness
-# -------------------------
 
 BLINK_CLOSED_EAR = 0.20
 BLINK_OPEN_EAR = 0.23
